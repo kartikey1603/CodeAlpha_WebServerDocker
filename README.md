@@ -87,7 +87,8 @@ Useful commands (verify & debug)
   docker compose up -d
   ```
 
-How the project maps to the Task 4 learning objectives
+How this project covers the learning objectives Below is a short mapping of the Task learning goals to concrete project elements and practices included in this repository.
+
 1) Learn Docker containerization basics
    - Where: `Dockerfile`
    - How: The Dockerfile demonstrates building an image from `nginx:alpine`, installing packages (`apk add curl`) and copying static content into the image. This shows image layering, small base images, and copying artifacts into image filesystem.
@@ -146,27 +147,6 @@ Files explained (quick)
 - app/index.html
   - Minimal static HTML page used to confirm the server is working.
 
-Verification checklist (for submission)
-- Start Docker Desktop / daemon.
-- Run:
-  ```bash
-  docker compose up --build -d
-  ```
-- Confirm container running:
-  ```bash
-  docker ps
-  ```
-- Confirm site reachable: open `http://localhost:8080` and verify the page content.
-- Confirm health status:
-  ```bash
-  docker inspect --format='{{.State.Health.Status}}' codealpha-docker-web
-  ```
-  - Expected: `healthy` (after a short period).
-- Stop and remove:
-  ```bash
-  docker compose down
-  ```
-  - Reload the browser — site should no longer be reachable.
 
 Troubleshooting tips
 - If `docker compose` is not found, try `docker-compose` or install Docker Compose plugin.
