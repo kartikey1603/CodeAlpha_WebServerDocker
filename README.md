@@ -156,9 +156,3 @@ Troubleshooting tips
   - Exec into container: `docker exec -it codealpha-docker-web /bin/sh` and run `curl -v http://localhost/`.
   - Confirm files present in `/usr/share/nginx/html`.
 - If image build fails due to network, check network/proxy settings or retry.
-
-Tips & next steps (optional enhancements)
-- Add a simple CI workflow to build the Docker image on push (GitHub Actions).
-- Publish built image to a registry (Docker Hub / GitHub Container Registry) as part of a CD pipeline.
-- Add an nginx configuration to demonstrate hosting multiple sites or redirects.
-- Add automated healthcheck alerts or container restart strategies for production-like behavior.
