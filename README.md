@@ -1,130 +1,121 @@
-# CodeAlpha — Web Server with Docker
+# CodeAlpha — Web Server using Docker (Task 4)
 
-A minimal, production‑style example showing how to serve a static website with nginx inside a Docker container, managed by Docker Compose.
+A minimal example showing how to serve a static website with nginx inside a Docker container, managed with Docker Compose.  
+This project demonstrate containerization, running a web server in Docker, and monitoring container health.
 
-This repository is a small learning task for containerizing a static web server. It includes:
-- Dockerfile: builds an nginx-based image and installs `curl` for health checks.
-- docker-compose.yml: builds and runs the container, exposes ports, and configures a healthcheck.
-- app/index.html: the static site served by nginx.
+Repository contents (important files)
+- `Dockerfile` — builds an nginx-based image and installs `curl` for health checks.
+- `docker-compose.yml` — builds & runs the container, exposes host port `8080`, and defines a healthcheck.
+- `app/index.html` — minimal static site served by nginx.
 
-Repository language composition: HTML (80%), Dockerfile (20%)
-
----
-
-Table of contents
-- Project status
-- Prerequisites
-- Quickstart (recommended)
-- Commands (detailed)
-- How it works (files explained)
-- Troubleshooting
-- Useful tips
-
----
-
-Project status
-- Ready to build and run locally using Docker Desktop or Docker Engine.
-- Default mapping: host port `8080` → container port `80`.
+Quick summary of key values
+- Image base: `nginx:alpine`
 - Container name: `codealpha-docker-web`
-- Healthcheck: container runs `curl -fsS http://localhost/` to assert readiness.
-
----
+- Host → Container port mapping: `8080:80`
+- Healthcheck: `curl -fsS http://localhost/` inside the container
 
 Prerequisites
 - Docker Desktop (Windows/macOS) or Docker Engine (Linux) installed and running.
-- Docker Compose (either the plugin `docker compose` or the standalone `docker-compose`).
+- Docker Compose (the CLI plugin `docker compose` or legacy `docker-compose`).
 - Terminal / Command Prompt.
 
----
+Quickstart — run the project
 
-Quickstart — run the project (recommended)
+1. Start Docker (Docker Desktop on Windows/macOS or ensure Docker daemon running on Linux).
 
-1. Start Docker Desktop (Windows/macOS) or ensure Docker daemon is running (Linux):
-   - Docker Desktop: open the app and wait until it shows "Docker is running".
-
-2. From the repository root (where `docker-compose.yml` lives), build and run:
+2. Open a terminal in the repository root (where `docker-compose.yml` is located) and run:
    ```bash
    # Compose v2 (recommended)
    docker compose up --build
 
-   # To run in background (detached):
-   docker compose up --build -d
+   # or legacy
+   docker-compose up --build
+   ```
+   - To run in background add `-d`:
+     ```bash
+     docker compose up --build -d
      ```
 
-3. Open the site in your browser:
-   - Visit: http://localhost:8080
+3. Visit the site:
+   - Open: http://localhost:8080
+   - If `docker ps` shows a different host port, use that port.
 
 4. Stop and remove containers:
    ```bash
    docker compose down
+   # or
+   docker-compose down
    ```
-   - After `down`, reload `http://localhost:8080` — the site should no longer be reachable.
 
----
-
-Commands — what to use and why
-
-- Build + run (foreground; shows logs)
-  ```bash
-  docker compose up --build
-  ```
-
-- Build + run (detached)
-  ```bash
-  docker compose up --build -d
-  ```
-
-- Stop & remove containers, networks (and optionally volumes)
-  ```bash
-  docker compose down
-  docker compose down -v   # also removes volumes
-  ```
-
-- See running containers
+Useful commands (verify & debug)
+- List running containers:
   ```bash
   docker ps
   ```
-
-- See all containers (including stopped)
+- Show all containers (including stopped):
   ```bash
   docker ps -a
   ```
-
-- View container logs
+- Show logs:
   ```bash
-  docker compose logs -f       # all services
-  docker logs codealpha-docker-web  # by container name
+  docker logs codealpha-docker-web
+  # or follow logs:
+  docker logs -f codealpha-docker-web
   ```
-
-- Show port mapping for the container
+- Stream Compose service logs:
   ```bash
-  docker ps
-  # or
+  docker compose logs -f
+  ```
+- Show port mappings:
+  ```bash
   docker port codealpha-docker-web
   ```
-
-- Inspect health status
+- Inspect container health status:
   ```bash
   docker inspect --format='{{.State.Health.Status}}' codealpha-docker-web
   ```
-
-- Manually test the site from the host
+- Enter running container (for debugging):
   ```bash
-  curl http://localhost:8080
+  docker exec -it codealpha-docker-web /bin/sh
+  # then inside container:
+  curl -v http://localhost/
+  ls -la /usr/share/nginx/html
+  ```
+- Rebuild without cache:
+  ```bash
+  docker compose build --no-cache
+  docker compose up -d
   ```
 
----
+How the project maps to the Task 4 learning objectives
+1) Learn Docker containerization basics
+   - Where: `Dockerfile`
+   - How: The Dockerfile demonstrates building an image from `nginx:alpine`, installing packages (`apk add curl`) and copying static content into the image. This shows image layering, small base images, and copying artifacts into image filesystem.
 
-How it works — files explained
+2) Deploy and manage a web server inside Docker containers
+   - Where: `docker-compose.yml`, `Dockerfile`, and `app/`
+   - How: `docker compose up --build` builds the image and runs the nginx container. Compose simplifies service lifecycle commands (start, stop, rebuild). The container serves static HTML from `/usr/share/nginx/html`.
 
+3) Understand container lifecycle and commands
+   - Where: README commands & examples above
+   - How: Using `docker compose up`, `docker ps`, `docker logs`, `docker exec`, and `docker compose down` demonstrates starting, inspecting, entering, and stopping containers—core lifecycle operations.
+
+4) Monitor container health and troubleshoot issues
+   - Where: `HEALTHCHECK` in both `Dockerfile` and `docker-compose.yml`
+   - How: The healthcheck runs `curl -fsS http://localhost/` inside the container. Use `docker inspect` to check `.State.Health.Status` and `docker logs` + `docker compose logs` to troubleshoot failures. Example troubleshooting steps are included in this README.
+
+5) Explore container-based app deployment best practices
+   - Where: Project layout and configuration
+   - How:
+     - Use of a small base image (`nginx:alpine`) for smaller attack surface and faster pulls.
+     - Separate static content in `app/` and copy at build time (immutable images).
+     - Healthchecks to provide readiness information to orchestrators.
+     - Use of Docker Compose for local orchestration and repeatable dev environment.
+     - Explicit port mapping and container naming for easier operations.
+     - Restart policy (`unless-stopped`) to increase resilience for long-running services.
+
+Files explained (quick)
 - Dockerfile
-  - Base image: `nginx:alpine` (small, production-ready nginx image)
-  - Installs `curl` (used by the HEALTHCHECK)
-  - Copies the `app` folder to the nginx web root: `/usr/share/nginx/html`
-  - Adds a `HEALTHCHECK` that returns healthy only if `curl` to `http://localhost/` succeeds
-  - Exposes port `80` in the image
-
-  Key lines:
   ```dockerfile
   FROM nginx:alpine
   RUN apk add --no-cache curl
@@ -132,23 +123,17 @@ How it works — files explained
   HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fsS http://localhost/ || exit 1
   EXPOSE 80
   ```
+  - Builds an image with nginx, adds `curl` for health checks, copies the static site, sets a healthcheck and exposes HTTP port.
 
 - docker-compose.yml
-  - Service name: `web`
-  - Build context: `.` (uses Dockerfile in repo root)
-  - Container name: `codealpha-docker-web`
-  - Port mapping: `"8080:80"` (host:container)
-  - Restart policy: `unless-stopped`
-  - Duplicate healthcheck configuration (compose-level) mirrors Dockerfile healthcheck
-
-  Key snippet:
   ```yaml
   version: "3.9"
   services:
     web:
       build: .
       container_name: codealpha-docker-web
-      ports: ["8080:80"]
+      ports:
+        - "8080:80"
       restart: unless-stopped
       healthcheck:
         test: ["CMD-SHELL", "curl -fsS http://localhost/ || exit 1"]
@@ -156,70 +141,44 @@ How it works — files explained
         timeout: 5s
         retries: 3
   ```
+  - Builds the image from the Dockerfile, runs service `web` with port forwarding, restart policy, and a compose-level healthcheck.
 
 - app/index.html
-  - A minimal static HTML page confirming the server is running and listing image/ports/healthcheck used.
+  - Minimal static HTML page used to confirm the server is working.
 
----
-
-Expected behavior and verification
-
-- On successful `docker compose up --build`, Docker will:
-  - Build the image (first run).
-  - Start the `codealpha-docker-web` container.
-  - The container will be reachable at `http://localhost:8080`.
-  - `docker ps` should show the container and port mapping (e.g. `0.0.0.0:8080->80/tcp`).
-  - `docker inspect` health status should transition to `healthy` after the healthcheck passes.
-
-Example `docker ps` output snippet:
-```
-CONTAINER ID  IMAGE                          COMMAND                  PORTS                   NAMES
-abc123def456  codealpha_web:latest           "nginx -g 'daemon of…"   0.0.0.0:8080->80/tcp    codealpha-docker-web
-```
-
----
-
-Troubleshooting
-
-- Page not loading
-  - Ensure Docker is running.
-  - Confirm the container state: `docker ps`
-  - Confirm port mapping: `docker port codealpha-docker-web`
-  - Check logs: `docker logs codealpha-docker-web` or `docker compose logs -f`
-  - If the host port `8080` is already used, edit `docker-compose.yml` and change `"8080:80"` to another port (e.g. `"8081:80"`), then rebuild/run.
-
-- Container repeatedly restarting or failing healthcheck
-  - Inspect health check logs and container logs for errors.
-  - Run `docker inspect` to see health details:
-    ```bash
-    docker inspect --format='{{json .State.Health}}' codealpha-docker-web | jq
-    ```
-
-- Compose command not found
-  - If `docker compose` is unavailable, use `docker-compose` (legacy) or install the Docker Compose plugin.
-
-- Permission / volume errors (Windows)
-  - Ensure Docker Desktop file sharing includes your project path (if mounting volumes).
-  - Run terminal with proper permissions.
-
----
-
-Useful tips
-
-- Run in detached mode when you don't want the logs to occupy your terminal:
+Verification checklist (for submission)
+- Start Docker Desktop / daemon.
+- Run:
   ```bash
   docker compose up --build -d
   ```
-
-- Rebuild without cache if changes are not reflected:
+- Confirm container running:
   ```bash
-  docker compose build --no-cache
-  docker compose up -d
+  docker ps
   ```
-
-- To enter a running container for debugging:
+- Confirm site reachable: open `http://localhost:8080` and verify the page content.
+- Confirm health status:
   ```bash
-  docker exec -it codealpha-docker-web /bin/sh
-  # from inside, you can curl localhost or inspect files under /usr/share/nginx/html
+  docker inspect --format='{{.State.Health.Status}}' codealpha-docker-web
   ```
+  - Expected: `healthy` (after a short period).
+- Stop and remove:
+  ```bash
+  docker compose down
+  ```
+  - Reload the browser — site should no longer be reachable.
 
+Troubleshooting tips
+- If `docker compose` is not found, try `docker-compose` or install Docker Compose plugin.
+- If port 8080 is in use, edit `docker-compose.yml` (change `"8080:80"` to another host port) or free the port.
+- If container fails healthcheck:
+  - Check logs: `docker logs codealpha-docker-web`
+  - Exec into container: `docker exec -it codealpha-docker-web /bin/sh` and run `curl -v http://localhost/`.
+  - Confirm files present in `/usr/share/nginx/html`.
+- If image build fails due to network, check network/proxy settings or retry.
+
+Tips & next steps (optional enhancements)
+- Add a simple CI workflow to build the Docker image on push (GitHub Actions).
+- Publish built image to a registry (Docker Hub / GitHub Container Registry) as part of a CD pipeline.
+- Add an nginx configuration to demonstrate hosting multiple sites or redirects.
+- Add automated healthcheck alerts or container restart strategies for production-like behavior.
